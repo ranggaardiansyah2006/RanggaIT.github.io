@@ -1,1 +1,377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tebak-Tebakan Buat Kamu</title>
+<style>
+:root{--night:#071b42;--green:#13d96a;--pink:#ff4f91}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:white;background:#071b42;overflow-x:hidden}
+.scene{min-height:100vh;position:relative;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:linear-gradient(180deg,#06204c 0%,#164b79 42%,#86b4c3 68%,#4f794b 69%,#23492f 100%);isolation:isolate}
+.scene:before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(circle at 75% 18%,#ffffff26 0 1px,transparent 2px),radial-gradient(circle at 25% 28%,#ffffff2b 0 1px,transparent 2px);background-size:45px 55px,70px 80px}
+.hill{position:absolute;bottom:0;left:-10%;width:120%;height:34%;background:linear-gradient(165deg,#72985a,#244b31);border-radius:48% 52% 0 0/22% 20% 0 0;z-index:-1}
+.hill:after{content:"";position:absolute;top:28%;left:10%;width:85%;height:2px;background:#d3dfb26b;transform:rotate(-8deg)}
+.app{width:min(100%,380px);text-align:center;position:relative}
+.top{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;font-size:12px;color:#eaf5ffb8}
+.avatar{margin:0 auto 14px;width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:#f0f4f9;border:3px solid #ffffffa8;box-shadow:0 8px 25px #0004;font-size:43px}
+h1{font-size:22px;margin:8px 0 7px;font-weight:800;text-shadow:0 2px 7px #001b38}
+p{margin:0 0 18px;color:#f0f6ff;font-size:14px}
+.card{background:#102a4dcc;border:1px solid #ffffff4a;border-radius:20px;padding:20px 17px;box-shadow:0 12px 30px #00142e55;backdrop-filter:blur(8px)}
+.pic{width:180px;height:180px;margin:0 auto 15px;border:4px solid #e7edf6;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#f9f5e8,#cbd5d4);box-shadow:0 5px 16px #0004;display:flex;align-items:center;justify-content:center;position:relative}
+.pic img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transform-origin:center center;
+  transform:scale(2.6);
+}
+.pic img.reveal{transform:scale(1)}
+.pic:after{
+  content:"🔍";
+  position:absolute;bottom:6px;right:8px;font-size:18px;
+  opacity:.85;pointer-events:none;
+}
+.pic.revealed:after{opacity:0}
+.question{font-weight:800;font-size:18px;margin:3px 0 15px}
+.answers{display:grid;gap:9px;width:100%;max-width:255px;margin:auto}
+button{font:inherit;cursor:pointer;color:white;border:1px solid #ffffffa8;border-radius:999px;padding:10px 14px;background:#07182ee8;box-shadow:0 3px 0 #0005;transition:transform .12s,background .2s}
+button:active{transform:scale(.97)}
+.answer{font-size:14px;padding:9px 12px}
+.answer.correct{background:#08bd58;border-color:#83ffb7}
+.answer.wrong{background:#d52238;border-color:#ff8e9a}
+.note{font-size:12px;opacity:.8;margin-top:15px}
+.primary{background:#ff4f91;border:0;font-weight:800;padding:10px 25px}
+.primary.wa{background:#25D366;margin-top:10px}
+.hidden{display:none!important}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:20px;z-index:5}
+.modalbox{width:min(100%,320px);padding:22px 18px;background:#071326f5;border:1px solid white;border-radius:18px;box-shadow:0 15px 50px #0009;text-align:center}
+.modalbox .big{font-size:52px}
+.modalbox h2{margin:6px 0;color:#ff5a67;font-size:21px}
+.modalbox p{font-size:13px;line-height:1.5}
+.modalPic{
+  width:130px;height:130px;margin:6px auto 14px;
+  border:3px solid #e7edf6;border-radius:12px;overflow:hidden;
+  background:#0b1f3a;box-shadow:0 5px 14px #0005;
+}
+.modalPic img{width:100%;height:100%;object-fit:cover;display:block}
+.chatbubble{margin:15px auto 0;max-width:285px;background:#e6f2ff;color:#16314d;border-radius:18px 18px 18px 4px;padding:14px;text-align:left;font-size:14px;box-shadow:0 8px 20px #0003}
+.chatbubble strong{display:block;margin-bottom:4px}
+.progress{height:5px;background:#ffffff35;border-radius:8px;margin:18px auto 0;max-width:250px;overflow:hidden}
+.bar{height:100%;background:#ff5b9c;width:0;transition:width .3s}
+.rekap{background:#ffffff12;border:1px solid #ffffff33;border-radius:12px;padding:12px;margin-top:15px;text-align:left;font-size:13px;line-height:1.6}
+.rekap h3{margin:0 0 8px;font-size:14px;color:#ffd1e5;text-align:center}
+.rekap .item{margin-bottom:10px;padding-bottom:8px;border-bottom:1px dashed #ffffff2b}
+.rekap .item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.rekap .salah{color:#ff9aa6}
+.alasanBox{margin-top:16px;text-align:left;background:#ffffff12;border:1px solid #ffffff33;border-radius:12px;padding:12px}
+.alasanBox label{display:block;font-size:13px;color:#ffd1e5;margin-bottom:8px;font-weight:700}
+.alasanBox textarea{width:100%;min-height:90px;resize:vertical;border-radius:10px;border:1px solid #ffffff55;background:#0b1f3a;color:white;font:inherit;font-size:13px;padding:10px;outline:none}
+.alasanBox textarea::placeholder{color:#ffffff70}
+.alasanBox textarea:focus{border-color:#ff5b9c}
 
+/* tombol musik melayang */
+.musicBtn{
+  position:fixed;top:14px;right:14px;z-index:6;
+  width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;font-size:18px;
+  background:#ff4f91;border:2px solid #ffffffcc;
+  box-shadow:0 6px 18px #0006;cursor:pointer;
+  transition:transform .15s, background .2s;
+}
+.musicBtn:active{transform:scale(.92)}
+.musicBtn.off{background:#4a5b78;opacity:.75}
+
+footer{position:fixed;bottom:10px;right:12px;font-size:10px;color:#ffffffa8}
+@media(max-height:650px){.card{padding:14px}.pic{width:120px;height:120px}.avatar{width:65px;height:65px;font-size:34px}h1{font-size:19px}.modalPic{width:100px;height:100px}}
+</style>
+</head>
+<body>
+
+<!-- ===== BACKSOUND ===== -->
+<!-- Ganti src dengan link/file lagu pilihanmu -->
+<audio id="bgm" loop preload="auto">
+  <source src="DJ MELODY POU KANE BY SOPAN YETE_musicaldown.com_1791844077.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Tombol on/off musik -->
+<div class="musicBtn" id="musicBtn" onclick="toggleMusic()" title="Musik on/off">🔊</div>
+
+<div class="scene">
+ <div class="hill"></div>
+ <div class="top"><span>‹　Tebak-Tebakan</span><span>⋮</span></div>
+ <main class="app">
+  <section id="intro" class="hidden">
+   <div class="avatar">🐻‍❄️</div><h1>Alooo Kamuuu! 😊</h1>
+   <p>Aku ada tebak-tebakan nih buat kamu ✨</p>
+   <button class="primary" onclick="startGame()">Mulai yuk 💚</button>
+  </section>
+  <section id="quiz" class="card hidden">
+   <div class="pic" id="picBox"><img id="pictureImg" src="" alt="gambar soal"></div>
+   <div class="question" id="question">Tebak ini gambar apa? 🤔</div>
+   <div class="answers" id="answers"></div>
+   <div class="progress"><div class="bar" id="bar"></div></div>
+   <div class="note" id="count">Pertanyaan 1 dari 4</div>
+  </section>
+  <section id="ending" class="hidden">
+   <div class="avatar" id="endAvatar">🐻‍❄️</div>
+   <h1 id="endTitle">Yahhh! 🥹</h1>
+   <p id="endText">Kamu udah sampai di akhir tebak-tebakan!</p>
+   <div class="rekap" id="rekap"></div>
+
+   <div class="alasanBox hidden" id="alasanBox">
+     <label>✍️ Tulis alasan kenapa kamu bisa salah nebak:</label>
+     <textarea id="alasanUser" placeholder="Contoh: aku keburu-buru jawabnya, atau lagi ngantuk, atau gambarnya kurang jelas..."></textarea>
+   </div>
+
+   <div class="chatbubble" id="endMessage"><strong>💬 Pesan buat kamu</strong>Makasih ya udah mau main. Semoga hari kamu menyenangkan, jangan lupa tersenyum 😊💗</div>
+   <button class="primary wa" onclick="kirimWA()">📤 Kirim ke WhatsApp</button>
+   <button class="primary" style="margin-top:10px" onclick="restart()">Main lagi ↻</button>
+  </section>
+ </main>
+</div>
+<div class="modal hidden" id="modal">
+ <div class="modalbox">
+   <div class="big" id="modalEmoji">🐻‍❄️</div>
+   <h2 id="modalTitle">❌ SALAH! 😅</h2>
+   <div class="modalPic"><img id="modalImg" src="" alt="gambar jawaban"></div>
+   <p id="modalText">Jawabannya belum tepat, coba lagi ya!</p>
+   <button class="primary" onclick="closeModal()">Coba lagi</button>
+ </div>
+</div>
+<footer>mini game • dibuat khusus buat kamu 💗</footer>
+<script>
+/* GANTI src DENGAN LINK FOTOMU SENDIRI */
+const questions=[
+ {
+   img:"7f79e3723dd5de7816bd241085af36b5.jpg",
+   q:"Tebak Ini Gambar Apa? 🤔",
+   opts:["🐼 panda","🐧 Penguin","🐈 kucing"],
+   answer:0
+ },
+ {
+   img:"IMG_20261014_013700.jpg",
+   q:"Kalo Ini Hewan Apa? 👀",
+   opts:["🐦 burung","🐈 Kucing","🦈 hiu"],
+   answer:2
+ },
+ {
+   img:"39412d9ee46b1d814279a7e1f97d2b11.jpg",
+   q:"Kalau yang ini apa hayo? 😆",
+   opts:["🦈 hiu","🐧 penguin","🐈 Kucing"],
+   answer:2
+ },
+ {
+   img:"be6f0cc060d21ee759cdeb46193ecb4d.jpg",
+   q:"Hewan apa yang satu ini? 👀",
+   opts:["🐟 Ikan","🐕‍🦺 anjing","🐸 Katak"],
+   answer:2
+ }
+];
+
+/* ====== ATUR DELAY DI SINI ====== */
+const DELAY_SALAH = 1000;  // ms sebelum modal salah muncul
+const DELAY_BENAR = 1200;  // ms sebelum lanjut ke soal berikutnya
+/* ================================ */
+
+/* ====== ATUR VOLUME BACKSOUND ====== */
+const VOLUME_BGM = 0.4; // 0.0 – 1.0
+/* ================================== */
+
+let idx=0;
+let results=[];
+let locked=false;
+let musicOn=true;
+
+const $=id=>document.getElementById(id);
+const bgm = document.getElementById("bgm");
+
+/* ==== KONTROL MUSIK ==== */
+function mulaiMusik(){
+  if(!musicOn) return;
+  bgm.volume = VOLUME_BGM;
+  bgm.play().catch(()=>{}); // kalau diblokir browser, diamkan saja
+}
+function toggleMusic(){
+  const btn = $("musicBtn");
+  if(musicOn){
+    bgm.pause();
+    musicOn=false;
+    btn.textContent="🔇";
+    btn.classList.add("off");
+  } else {
+    bgm.play().catch(()=>{});
+    musicOn=true;
+    btn.textContent="🔊";
+    btn.classList.remove("off");
+  }
+}
+/* ======================= */
+
+function show(id){["intro","quiz","ending"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
+function startGame(){
+  idx=0;results=[];locked=false;
+  show("quiz");
+  mulaiMusik();  // <-- backsound mulai di sini (butuh interaksi user)
+  render();
+}
+
+function render(){
+ const d=questions[idx];
+ locked=false;
+
+ const img=$("pictureImg");
+ const box=$("picBox");
+
+ img.classList.remove("reveal");
+ box.classList.remove("revealed");
+
+ img.src=d.img;
+ img.alt="Gambar pertanyaan "+(idx+1);
+
+ $("question").textContent=d.q;
+ $("count").textContent=`Pertanyaan ${idx+1} dari ${questions.length}`;
+ $("bar").style.width=(idx/questions.length*100)+"%";
+ $("answers").innerHTML="";
+ d.opts.forEach((o,i)=>{
+   let b=document.createElement("button");
+   b.className="answer";b.textContent=o;
+   b.onclick=()=>choose(i,b);
+   $("answers").appendChild(b);
+ });
+}
+
+function revealImage(){
+ $("pictureImg").classList.add("reveal");
+ $("picBox").classList.add("revealed");
+}
+
+function choose(i,b){
+ if(locked) return;
+ locked=true;
+
+ const d=questions[idx];
+ const benar = (i===d.answer);
+
+ results.push({
+   question:d.q,
+   pilihanUser:d.opts[i],
+   jawabanBenar:d.opts[d.answer],
+   salah:!benar
+ });
+
+ revealImage();
+ document.querySelectorAll(".answer").forEach(x=>x.disabled=true);
+
+ if(!benar){
+  b.classList.add("wrong");
+
+  setTimeout(()=>{
+    $("modalImg").src = d.img;
+    $("modalImg").alt = "Gambar jawaban benar";
+
+    $("modalEmoji").textContent="🐻‍❄️";
+    $("modalTitle").textContent="❌ SALAH! 😅";
+    $("modalText").innerHTML =
+      "<b>Jawaban yang benar:</b> "+d.opts[d.answer]+"<br><br>"+
+      "Nanti di akhir kamu bisa tulis sendiri alasan kenapa bisa salah ya 😊";
+    $("modal").classList.remove("hidden");
+  }, DELAY_SALAH);
+  return;
+ }
+
+ b.classList.add("correct");
+ $("bar").style.width=((idx+1)/questions.length*100)+"%";
+
+ setTimeout(()=>{
+   idx++;
+   if(idx>=questions.length) finish();
+   else render();
+ }, DELAY_BENAR);
+}
+
+function closeModal(){
+ $("modal").classList.add("hidden");
+ idx++;
+ if(idx>=questions.length) finish();
+ else render();
+}
+
+function finish(){
+ const total=questions.length;
+ const jumlahBenar=results.filter(r=>!r.salah).length;
+ const jumlahSalah=results.filter(r=>r.salah).length;
+
+ if(jumlahSalah===0){
+   $("endAvatar").textContent="🏆";
+   $("endTitle").textContent="HEBAT! SEMUA BENAR! 🎉";
+   $("endText").textContent="Kamu luar biasa! Semua jawaban benar!";
+   $("endMessage").innerHTML="<strong>💬 Pesan buat kamu</strong>Selamat ya! Kamu berhasil menjawab semua tebak-tebakan dengan benar. Kamu hebat tetap semangat ya! 🥳💗";
+   $("alasanBox").classList.add("hidden");
+ } else {
+   $("endAvatar").textContent="🐻‍❄️";
+   $("endTitle").textContent="Yahhh! 🥹";
+   $("endText").textContent=`Kamu menjawab benar ${jumlahBenar} dari ${total} soal.`;
+   $("endMessage").innerHTML="<strong>💬 Pesan buat kamu</strong>Makasih ya udah mau main. Jangan sedih lagi ya, yang penting udah berusaha. Semoga hari kamu menyenangkan 😊💗";
+   $("alasanBox").classList.remove("hidden");
+ }
+
+ let html = `<h3>📊 Rekap Hasil: ${jumlahBenar}/${total} Benar</h3>`;
+ if(jumlahSalah===0){
+   html += `<div class="item" style="text-align:center;color:#83ffb7">✨ Semua jawaban benar! Tidak ada yang salah. ✨</div>`;
+ } else {
+   let no=1;
+   results.forEach((r)=>{
+     if(r.salah){
+       html += `<div class="item">
+         <b>${no}. ${r.question}</b><br>
+         <span class="salah">❌ Jawabanmu: ${r.pilihanUser}</span><br>
+         ✅ Jawaban benar: <b>${r.jawabanBenar}</b>
+       </div>`;
+       no++;
+     }
+   });
+ }
+ $("rekap").innerHTML=html;
+
+ $("alasanUser").value = "";
+ window.__waData = {total, jumlahBenar, jumlahSalah, results};
+ show("ending");
+}
+
+function kirimWA(){
+ const {total, jumlahBenar, jumlahSalah, results} = window.__waData;
+ const alasanUser = $("alasanUser").value.trim();
+
+ let teks = "*🎯 HASIL TEBAK-TEBAKAN 🎯*\n\n";
+ teks += `📊 Skor: *${jumlahBenar}/${total} benar*\n`;
+ teks += `✅ Benar: ${jumlahBenar}\n`;
+ teks += `❌ Salah: ${jumlahSalah}\n\n`;
+
+ if(jumlahSalah===0){
+   teks += "🎉 *Selamat! Semua jawaban benar!* Kamu memang hebat! 🏆\n";
+ } else {
+   teks += "*📝 Daftar jawaban yang salah:*\n\n";
+   let no=1;
+   results.forEach(r=>{
+     if(r.salah){
+       teks += `${no}. *${r.question}*\n`;
+       teks += `   ❌ Jawabanmu: ${r.pilihanUser}\n`;
+       teks += `   ✅ Jawaban benar: ${r.jawabanBenar}\n\n`;
+       no++;
+     }
+   });
+
+   teks += "*💬 Alasan kenapa bisa salah:*\n";
+   teks += (alasanUser !== "" ? alasanUser : "(belum diisi)") + "\n\n";
+ }
+
+ teks += "_Dikirim dari mini game Tebak-Tebakan 💗_";
+
+ const url = "https://wa.me/6289509844510?text=" + encodeURIComponent(teks);
+ window.open(url, "_blank");
+}
+
+function restart(){ show("intro"); }
+show("intro");
+</script>
+</body>
+</html>
